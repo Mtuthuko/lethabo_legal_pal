@@ -1,5 +1,5 @@
 
-# Lethabo, Your Legal Pal 🦅🇿🇦
+# Lethabo, Your Legal Pal ⚖️🏛️📜⚖️🎓🇿🇦
 
 **Your rights, in plain English. Howzit, I'm Lethabo!**
 
