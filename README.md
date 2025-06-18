@@ -46,7 +46,7 @@ graph TD
 
     subgraph "Stage 1: The Research Crew (Backend Process)"
         C --> D((Start Research Crew));
-        D --> R[Researcher Agent<br/>(uses Serper API)];
+        D --> R[Researcher Agent];
         R --> S[Simplifier Agent];
         S --> E[Scenario Creator Agent];
         E --> V[Reviewer Agent];
