@@ -40,7 +40,7 @@ Here is a visual representation of the flow:
 graph TD
     subgraph "User Interface (Streamlit)"
         A[User enters a legal topic] --> B{App Backend};
-        B --> C[Show "Researching..." Spinner];
+        B --> C[Show Researching Spinner];
         F[Chat Interface] --> G{User asks follow-up question};
     end
 
