@@ -1,0 +1,52 @@
+/* style.css */
+
+/* Define our South African flag colors as CSS variables */
+:root {
+    --sa-green: #007A4D;
+    --sa-gold: #FFB612;
+    --sa-black: #000000;
+    --sa-red: #DE3831;
+    --sa-blue: #001489;
+    --sa-white: #FFFFFF;
+    --light-grey: #f0f2f6; /* Streamlit's default light bg for contrast */
+}
+
+/* Style the main app container */
+.stApp {
+    background-color: var(--sa-black);
+}
+
+/* Style the header with a cool gradient and our app title */
+div[data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"] > [data-testid="stVerticalBlock"] > h1 {
+    font-weight: bold;
+    color: var(--sa-white);
+    background: linear-gradient(90deg, var(--sa-green), var(--sa-gold), var(--sa-black));
+    padding: 1rem;
+    border-radius: 10px;
+    text-align: center;
+}
+
+/* Style the chat messages */
+[data-testid="chat-bubble-user"] {
+    background-color: var(--sa-gold) !important;
+    color: var(--sa-black);
+}
+
+[data-testid="chat-bubble-assistant"] {
+    background-color: var(--sa-green) !important;
+    color: var(--sa-white);
+}
+
+/* Style the main button */
+.stButton > button {
+    background-color: var(--sa-red);
+    color: var(--sa-white);
+    border: 2px solid var(--sa-black);
+    font-weight: bold;
+    border-radius: 10px;
+}
+.stButton > button:hover {
+    background-color: var(--sa-blue);
+    color: var(--sa-white);
+    border: 2px solid var(--sa-gold);
+}
