@@ -3,10 +3,15 @@
 
 **Your rights, in plain English. Howzit, I'm Lethabo!**
 
+
+```
+## 🛠️ Tech Stack & Tools
+
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Streamlit](https://img.shields.io/badge/built%20with-Streamlit-ff4b4b.svg)](https://streamlit.io)
 ![Google Gemini](https://img.shields.io/badge/Google-Gemini-4285F4?style=for-the-badge)
 ![CrewAI](https://img.shields.io/badge/CrewAI-%231DA1F2.svg?style=for-the-badge)
+```
 
 
 
