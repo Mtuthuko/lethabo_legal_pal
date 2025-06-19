@@ -17,7 +17,6 @@ Meet **Lethabo, Your Legal Pal**. We're ditching the confusing jargon and breaki
 This interactive chatbot makes understanding complex legal topics simple and conversational. No more confusion. No more intimidation. Just clear, simple answers so you can walk tall, knowing your rights.
 
  
-*(**Note:** You should replace the URL above with a real screenshot of your app!)*
 
 ## Key Features
 
