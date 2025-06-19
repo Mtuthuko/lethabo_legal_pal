@@ -16,8 +16,7 @@ def initialize_llm(temperature=0.5):
         return None
     try:
         llm = ChatVertexAI(
-        model_name="gemini-2.0-flash-001", # Vertex AI uses slightly different model names
-        # project="multi-agentic-animme" # You need to specify your project ID
+        model_name="gemini-2.0-flash-001", 
         project=project_id
     )
         return llm
