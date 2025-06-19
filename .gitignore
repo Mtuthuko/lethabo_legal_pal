@@ -1,0 +1,30 @@
+.env
+/bin/*
+/Users/mtuthukomngomezulu/Documents/Saas Lethabo Legal Pal/lethabo_legal_pal/lethabo_legal_pal/*
+*.pyc
+../lethabo_legal_pal/lib/*
+../lethabo_legal_pal/include/*
+
+../lethabo_legal_pal/share/*
+../lethabo_legal_pal/lib64/*
+../lethabo_legal_pal/lib/python3.11/site-packages/*
+# Ignore Python cache files
+__pycache__/
+*.py[cod]
+# Ignore virtual environment directories
+venv/
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+# Ignore logs
+*.log
+# Ignore coverage reports
+.coverage
+# Ignore build directories
+build/
+dist/
+# Ignore egg-info directories
+*.egg-info/
+# Ignore compiled C extensions
+*.so
+# Ignore data files
+*.data  
