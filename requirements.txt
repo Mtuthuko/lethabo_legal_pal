@@ -230,7 +230,7 @@ torch==2.3.0
 torchvision==0.18.0
 torchaudio==2.3.0
 diffusers[torch]==0.27.2
-transformers==4.40.1
+transformers==4.50.0
 accelerate==0.29.3
 dlib-bin==19.24.0
 face-alignment==1.4.1
