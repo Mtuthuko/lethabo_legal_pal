@@ -226,7 +226,7 @@ moviepy==1.0.3
 replicate==0.25.1
 elevenlabs==1.2.0
 google-cloud-texttospeech==2.15.0
-torch==2.3.0
+torch==2.7.1
 torchvision==0.18.0
 torchaudio==2.3.0
 diffusers[torch]==0.27.2
