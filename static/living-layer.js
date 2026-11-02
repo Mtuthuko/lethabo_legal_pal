@@ -1,5 +1,5 @@
 /*!
- * Living Layer 1.1.0
+ * Living Layer 1.2.0
  * A companion character that follows the reader down the page, gold dust with
  * real depth, and small 3D touches: tilt, depth, 3D reveal and magnetic buttons.
  *
@@ -26,7 +26,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  var VERSION = '1.1.0';
+  var VERSION = '1.2.0';
   var TAU = Math.PI * 2;
 
   /* ======================================================================
@@ -499,7 +499,7 @@
     zIndex: 60,
     safeTop: 'auto',          // px to keep clear at the top, or 'auto' to measure a fixed header
     scroller: null,           // selector of the scrolling element when the page itself doesn't scroll
-    toggle: true,             // pause button: true | false | { position, label, bg, fg, line }
+    toggle: true,             // pause button: true | false | { position, label, titleOn, titleOff, bg, fg, line }
     tilt: '[data-tilt]',
     depth: '[data-depth]',
     reveal: '[data-reveal-3d]',
@@ -687,6 +687,22 @@
         var a = anchorOf(els[i]);
         if (a) perches.push({ el: els[i], x: a.x, y: a.y });
       }
+    }
+    // Is the page under this spot free of words and controls? We probe the
+    // body and both wingtips, so it never settles on a line of text or a button.
+    function ownText(el) {
+      for (var n = el.firstChild; n; n = n.nextSibling) if (n.nodeType === 3 && /\S/.test(n.nodeValue)) return true;
+      return false;
+    }
+    function clearGround(x, y) {
+      var r = sizePx * 0.45, pts = [[x, y], [x - r, y], [x + r, y], [x, y - r * 0.6]];
+      for (var j = 0; j < pts.length; j++) {
+        var el = document.elementFromPoint(clamp(pts[j][0], 1, vw - 2), clamp(pts[j][1], 1, vh - 2));
+        for (var i = 0; el && i < 3 && el !== document.body; i++, el = el.parentElement) {
+          if (/^(A|BUTTON|LABEL|INPUT|TEXTAREA|SELECT|SUMMARY)$/.test(el.tagName) || ownText(el)) return false;
+        }
+      }
+      return true;
     }
     function pickPerch() {
       var sy = scrollTop(), best = null, bestD = Infinity;
@@ -918,7 +934,7 @@
         if (idle > (o.calm ? 0.5 : 1.1) && st.modeT > (o.calm ? 1.2 : 2.4) && now - st.restAt > (o.calm ? 1500 : 4200)) {
           var p = pickPerch();
           if (p) { st.perch = p; setMode('toPerch'); }
-          else if (idle > 6 && spec.rest === 'land') {
+          else if (idle > 6 && spec.rest === 'land' && clearGround(st.x, st.y)) {
             st.perch = { el: null, x: st.x, y: st.y + scrollTop(), here: true };
             setMode('toPerch');
           }
@@ -1307,7 +1323,8 @@
     function syncToggle() {
       if (!toggleBtn) return;
       toggleBtn.setAttribute('aria-pressed', String(enabled));
-      toggleBtn.title = enabled ? 'Moving effects are on. Click to pause them.' : 'Moving effects are paused. Click to play them.';
+      var tcfg = typeof o.toggle === 'object' ? o.toggle : {};
+      toggleBtn.title = enabled ? (tcfg.titleOn || 'Moving effects are on. Click to pause them.') : (tcfg.titleOff || 'Moving effects are paused. Click to play them.');
     }
 
     /* ---- events */
@@ -1366,7 +1383,7 @@
       if (!spec || !started) return;
       st.loop = LOOP_T;
       burst(st.x, st.y, 26, 1.2);
-      if (st.mode === 'perched') leave();
+      if (st.mode === 'perched' || st.mode === 'toPerch') leave();
     }
     function visit(el) {
       if (!spec || !el) return;
