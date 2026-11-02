@@ -1,52 +1,812 @@
-/* style.css */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Emoji:wght@600&text=%F0%9F%A6%85&display=swap');
 
-/* Define our South African flag colors as CSS variables */
+/* ==========================================================================
+   Lethabo, Your Legal Pal: style.css
+   Design "Convergence": the flag's Y, redrawn tone-on-tone in veld greens,
+   converges into one road that runs under the visitor's question.
+   DESIGN.md explains the system; this file implements it.
+
+   Loaded by app.py (load_css) on every run, after .streamlit/config.toml has
+   set the theme (fonts, colours, radius). Hooks used here, and only these:
+   Streamlit's data-testid attributes, the .st-key-<key> classes that keyed
+   containers and widgets in app.py get, and stLayoutWrapper. Never the
+   generated st-emotion-cache-* classes: they change between versions.
+
+   Sections: 1 tokens . 2 browser surfaces . 3 shell . 4 welcome hero and
+   road . 5 research state . 6 errors . 7 chat masthead . 8 sticky chat head
+   . 9 messages . 10 dock . 11 living-layer helpers . 12 motion . 13 reduced
+   motion . 14 responsive
+   ========================================================================== */
+
+
+/* 1. Tokens ================================================================ */
 :root {
-    --sa-green: #007A4D;
-    --sa-gold: #FFB612;
-    --sa-black: #000000;
-    --sa-red: #DE3831;
-    --sa-blue: #001489;
-    --sa-white: #FFFFFF;
-    --light-grey: #f0f2f6; /* Streamlit's default light bg for contrast */
+  /* Brand properties, kept verbatim from the original app */
+  --sa-green: #007A4D;
+  --sa-gold: #FFB612;
+  --sa-black: #000000;   /* kept, unused */
+  --sa-red: #DE3831;
+  --sa-blue: #001489;
+  --sa-white: #FFFFFF;
+  --light-grey: #f0f2f6; /* kept, unused */
+
+  /* Grounds */
+  --veld: #004C33;        /* welcome page, header, chat masthead */
+  --veld-deep: #003624;   /* the flag's inner triangle (tonal), signposts, toggle */
+  --paper: #FFFFFF;       /* chat reading ground, sticky chat head, dock */
+  --mist: #EFF5F0;        /* soft text on veld; table heads, code, blockquotes */
+  --green-tint: #E2F2E8;  /* numeral discs, outline-button hover */
+  --you: #FFF4D9;         /* the visitor's chat bubble */
+  --you-edge: #F2D58A;    /* bubble hairline (decorative) */
+
+  /* Ink and lines */
+  --ink: #0F1D16;         /* body text on paper, 17.39:1 */
+  --ink-2: #43554B;       /* secondary text and placeholders, 7.96:1 */
+  --green-700: #00653F;   /* "Lethabo" name label, list numerals, 7.16:1 */
+  --line-ui: #6E8377;     /* chat-input border, 4.06:1 on paper */
+  --line-soft: #D5E2D9;   /* decorative hairlines only */
+  --on-veld: #FFFFFF;                     /* 10.09:1 on veld */
+  --on-veld-soft: #EFF5F0;                /* = mist, 9.12:1 on veld */
+  --on-veld-line: rgb(255 255 255 / .6);  /* pill borders, 4.69:1 on veld */
+  --on-veld-hair: rgb(255 255 255 / .22); /* decorative dividers on veld */
+
+  /* Action */
+  --gold: var(--sa-gold); /* CTA, send, research light, "Howzit!", timer. Never text on paper */
+  --gold-hover: #FFC63D;
+  --gold-press: #F5A800;
+  --selection: #FFE2A0;
+  --link: var(--sa-blue); /* links and the focus ring on paper, 14.37:1 */
+
+  /* Alerts (red appears nowhere else) */
+  --alert-ink: #A3231C;   /* 6.56:1 on alert-wash */
+  --alert-wash: #FCEDEB;
+  --alert-edge: rgb(222 56 49 / .35);
+
+  /* Companion only (decorative, never text) */
+  --malachite: #45C08B;
+  --malachite-sheen: #9BE6BF;
+
+  /* Type */
+  --font-display: 'Gabarito', 'Noto Emoji', system-ui, sans-serif;
+  --font-text: 'Atkinson Hyperlegible Next', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Space (4px base) */
+  --s-1: .25rem; --s-2: .5rem; --s-3: .75rem; --s-4: 1rem;
+  --s-5: 1.5rem; --s-6: 2rem;  --s-7: 3rem;   --s-8: 4rem;
+
+  /* Radius */
+  --r-tile: .625rem; --r-alert: .75rem; --r-field: .875rem;
+  --r-bubble: 18px;  --r-tail: 6px;     --r-avatar: 9px; --r-pill: 999px;
+
+  /* Shadow (offset plus soft blur; no zero-offset glows) */
+  --sh-field: 0 1px 0 rgb(0 0 0 / .08), 0 12px 28px -14px rgb(0 20 12 / .6);
+  --sh-cta:   0 10px 22px -12px rgb(0 0 0 / .55);
+  --sh-tile:  0 12px 20px -14px rgb(0 0 0 / .65);
+  --sh-dock:  0 -10px 28px -20px rgb(15 29 22 / .35);
+
+  /* Road geometry (the field sits on the road) */
+  --input-h: 56px; --band: 84px; --band-edge: 6px; --apex-gap: 60px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --t-micro: 150ms; --t-press: 80ms; --t-state: 280ms; --t-stand: 640ms; --t-flow: 2.4s;
 }
 
-/* Style the main app container */
-.stApp {
-    background-color: var(--sa-black);
+
+/* 2. Browser surfaces ======================================================= */
+::selection { background: var(--selection); color: var(--ink); }
+.stApp input,
+.stApp textarea { caret-color: var(--sa-green); }
+
+/* Focus: a 3px ring, flag blue on paper and gold on veld. Never removed
+   without a replacement (fields show it on their frame instead). */
+.stApp :focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
+.stApp:has(.st-key-hero) :focus-visible,
+.stApp [data-testid="stHeader"] :focus-visible,
+.stApp .st-key-masthead :focus-visible { outline-color: var(--gold); }
+
+.stApp a { text-decoration-line: underline; text-decoration-thickness: 1px; text-underline-offset: .18em; }
+.stApp a:hover { text-decoration-thickness: 2px; }
+
+/* Streamlit scrolls <main>: stMain on the welcome view, stAppScrollToBottomContainer once a chat input is docked. */
+.stApp :is([data-testid="stMain"], [data-testid="stAppScrollToBottomContainer"]) {
+  overflow-x: clip;
+  scrollbar-width: thin;
+  scrollbar-color: #9DB3A6 transparent;
+}
+.stApp:has(.st-key-hero) [data-testid="stMain"] { scrollbar-color: rgb(255 255 255 / .35) transparent; }
+
+
+/* 3. Shell ================================================================== */
+/* Header: veld in every state; its toolbar, Deploy, menu and status widget in white. */
+.stApp [data-testid="stHeader"] { background: var(--veld); color: var(--on-veld); }
+.stApp [data-testid="stHeader"] :is(button, a, span, p, div, label) { color: var(--on-veld); }
+.stApp [data-testid="stHeader"] svg { fill: currentColor; color: var(--on-veld); }
+.stApp [data-testid="stHeader"] button:hover { background: rgb(255 255 255 / .12); }
+.stApp [data-testid="stDecoration"] { display: none; }
+
+/* Grounds. The welcome view (home, research, error) is one veld field, edge to
+   edge: deliberate, because the companion reads the real background under it.
+   Chat and the start-up error stay on paper (the theme background). */
+.stApp:has(.st-key-hero) { background: var(--veld); }
+.stApp:has(.st-key-hero) [data-testid="stMainBlockContainer"] {
+  min-height: 100%;          /* the field always reaches the bottom of the window */
+  padding-bottom: 6rem;      /* the last content scrolls clear of the pause toggle */
+  overflow: visible clip;    /* the Y art may run to the edges but never adds vertical scroll */
 }
 
-/* Style the header with a cool gradient and our app title */
-div[data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"] > [data-testid="stVerticalBlock"] > h1 {
-    font-weight: bold;
-    color: var(--sa-white);
-    background: linear-gradient(90deg, var(--sa-green), var(--sa-gold), var(--sa-black));
-    padding: 1rem;
-    border-radius: 10px;
-    text-align: center;
+/* Text on veld. Labels, paragraphs, list items and the spinner inherit white. */
+.st-key-hero,
+.st-key-masthead { color: var(--on-veld); }
+.st-key-hero [data-testid="stMarkdownContainer"],
+.st-key-masthead [data-testid="stMarkdownContainer"] { color: inherit; }
+
+/* Streamlit pulls each markdown block up by 1rem (margin-bottom: -1rem) to cancel
+   its last paragraph's margin. Where this file sets those margins itself, the
+   pull is cancelled too, so the spacing below is exactly what it says. */
+:is(.st-key-hero, .st-key-masthead, .st-key-chat_head) [data-testid="stHeading"] [data-testid="stMarkdownContainer"],
+:is(.st-key-hero, .st-key-masthead) > [data-testid="stElementContainer"] > [data-testid="stMarkdown"] [data-testid="stMarkdownContainer"],
+.st-key-crew [data-testid="stMarkdown"] [data-testid="stMarkdownContainer"],
+.stApp [data-testid="stChatMessageContent"] [data-testid="stMarkdownContainer"] { margin-bottom: 0; }
+
+
+/* 4. Welcome hero and road ================================================== */
+.st-key-hero {
+  position: relative;
+  gap: 0;                    /* rhythm comes from the margins below */
+  padding: 3rem 0 3.5rem;
 }
 
-/* Style the chat messages */
-[data-testid="chat-bubble-user"] {
-    background-color: var(--sa-gold) !important;
-    color: var(--sa-black);
+/* Title: two balanced lines; the eagle falls through to Noto Emoji (one line glyph in the text colour). */
+.st-key-hero [data-testid="stHeading"] { margin: 0; }
+.st-key-hero [data-testid="stHeading"] h1 {
+  margin: 0;
+  padding: 0;
+  font: 800 clamp(2.5rem, 1.75rem + 3vw, 4.25rem)/.98 var(--font-display);
+  letter-spacing: -.025em;
+  text-wrap: balance;
+  color: var(--on-veld);
 }
 
-[data-testid="chat-bubble-assistant"] {
-    background-color: var(--sa-green) !important;
-    color: var(--sa-white);
+/* Greeting: "Howzit!" in gold display, the rest in mist. */
+.st-key-hero > [data-testid="stElementContainer"]:has(> [data-testid="stMarkdown"]) { margin-top: 1.25rem; }
+.st-key-hero > [data-testid="stElementContainer"] > [data-testid="stMarkdown"] p {
+  margin: 0;
+  max-width: 31em;
+  font-size: 1.25rem;
+  line-height: 1.45;
+  color: var(--on-veld-soft);
+}
+:is(.st-key-hero, .st-key-masthead) > [data-testid="stElementContainer"] > [data-testid="stMarkdown"] strong {
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--gold);
 }
 
-/* Style the main button */
-.stButton > button {
-    background-color: var(--sa-red);
-    color: var(--sa-white);
-    border: 2px solid var(--sa-black);
-    font-weight: bold;
-    border-radius: 10px;
+/* The road container wraps the topic field. Nothing may render below the
+   input inside it: the band below is registered to the 56px field row. */
+.st-key-hero > [data-testid="stLayoutWrapper"]:has(> .st-key-road) { margin-top: 2.5rem; }
+.st-key-road { position: relative; z-index: 0; }
+.st-key-road [data-testid="stWidgetLabel"] { margin-bottom: 1.75rem; }  /* the road's white edge clears the label */
+.st-key-road [data-testid="stWidgetLabel"] p {
+  max-width: 44em;           /* one line on desktop; no orphaned "stop')" */
+  text-wrap: pretty;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--on-veld);
 }
-.stButton > button:hover {
-    background-color: var(--sa-blue);
-    color: var(--sa-white);
-    border: 2px solid var(--sa-gold);
+.st-key-road [data-testid="stTextInputRootElement"],
+.st-key-road [data-testid="stTextInputRootElement"]:focus-within {
+  height: var(--input-h);
+  background: var(--paper);
+  border-color: transparent;
+  border-radius: var(--r-field);
+  box-shadow: var(--sh-field);
+}
+.st-key-road [data-testid="stTextInputRootElement"] > div { background: transparent; }
+.st-key-road [data-testid="stTextInputRootElement"] input {
+  height: 100%;
+  padding-inline: 1.125rem;
+  background: transparent;
+  font-size: 1.125rem;
+  color: var(--ink);
+}
+.st-key-road [data-testid="stTextInputRootElement"] input::placeholder { color: var(--ink-2); opacity: 1; }
+.st-key-road [data-testid="stTextInputRootElement"]:focus-within { outline: 3px solid var(--gold); outline-offset: 3px; }
+.st-key-road [data-testid="stTextInputRootElement"] input:focus-visible { outline: none; }
+
+/* The road: an 84px band (6px white, 72px SA green, 6px white) centred on the
+   field row, running behind the field to the screen edges. */
+.st-key-road::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: calc((100% - 100vw) / 2);
+  right: calc((100% - 100vw) / 2);
+  bottom: calc(var(--input-h) / 2 - var(--band) / 2);
+  height: var(--band);
+  background: linear-gradient(#fff 0 var(--band-edge), var(--sa-green) var(--band-edge) calc(100% - var(--band-edge)), #fff calc(100% - var(--band-edge)));
+}
+@media (min-width: 1024px) {
+  .st-key-road::before { left: calc(-1 * var(--apex-gap)); }
+}
+
+/* The Y arms (desktop): the flag's Y in veld tones, converging 60px before the
+   field. SVG apex (1340, 700) sits on the field row. */
+.st-key-road::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: 100%;
+  bottom: calc(var(--input-h) / 2 - 700px);
+  width: 1400px;
+  height: 1400px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1400 1400'%3E%3Cpath d='M-160 -800 L1340 700 L-160 2200' fill='none' stroke='%23fff' stroke-width='84' stroke-linejoin='miter' stroke-miterlimit='4'/%3E%3Crect x='1340' y='658' width='60' height='84' fill='%23fff'/%3E%3Cpath d='M1289.1 700 L-210.9 -800 L-210.9 2200 Z' fill='%23FFB612'/%3E%3Cpath d='M1277.8 700 L-222.2 -800 L-222.2 2200 Z' fill='%23003624'/%3E%3Cpath d='M-160 -800 L1340 700 L-160 2200' fill='none' stroke='%23007A4D' stroke-width='72' stroke-linejoin='miter' stroke-miterlimit='4'/%3E%3Crect x='1340' y='664' width='60' height='72' fill='%23007A4D'/%3E%3C/svg%3E") no-repeat 0 0 / 1400px 1400px;
+  pointer-events: none;
+}
+@media (max-width: 1023px) {
+  .st-key-road::after { display: none; }
+}
+
+/* CTA: the gold pill. If this CSS fails, Streamlit's own primary still passes contrast. */
+.st-key-hero > [data-testid="stElementContainer"]:has(> [data-testid="stButton"]) { margin-top: 1.375rem; }
+.st-key-hero [data-testid="stBaseButton-primary"],
+.st-key-hero [data-testid="stBaseButton-primary"]:focus:not(:active) {
+  min-height: 52px;
+  padding: 0 1.75rem;
+  border: 1.5px solid transparent;   /* invisible here, drawn in forced-colours mode */
+  border-radius: var(--r-pill);
+  background: var(--gold);
+  color: var(--ink);
+  box-shadow: var(--sh-cta);
+  font: 700 1.0625rem var(--font-text);
+}
+.st-key-hero [data-testid="stBaseButton-primary"] :is([data-testid="stMarkdownContainer"], p) { font: 700 1.0625rem/1.2 var(--font-text); color: inherit; }
+.st-key-hero [data-testid="stBaseButton-primary"]:is(:hover, :focus:hover) { background: var(--gold-hover); color: var(--ink); }
+.st-key-hero [data-testid="stBaseButton-primary"]:is(:active, :focus:active) { background: var(--gold-press); color: var(--ink); }
+
+/* The legal guide note: always visible, static, never dimmed, never a perch. */
+.st-key-hero > [data-testid="stLayoutWrapper"]:has(> .st-key-guide_note) { margin-top: 1rem; }
+.st-key-guide_note [data-testid="stCaptionContainer"],
+.st-key-guide_note [data-testid="stCaptionContainer"] p {
+  opacity: 1;
+  font-size: .9375rem;
+  line-height: 1.45;
+  color: var(--on-veld-soft);
+  text-wrap: pretty;         /* no lone "lawyer." on narrow phones */
+}
+.st-key-guide_note [data-testid="stCaptionContainer"] :is([data-testid="stIconMaterial"], [role="img"]) {
+  font-size: 1.125em;
+  color: var(--gold);
+  vertical-align: -.2em;
+  margin-right: .125rem;
+}
+
+/* Example pills: fill the field, never submit. */
+.st-key-hero > .st-key-examples { margin-top: 2rem; }   /* keeps a perched sunbird clear of the guide note */
+.st-key-examples [data-testid="stWidgetLabel"] { margin-bottom: .625rem; }
+.st-key-examples [data-testid="stWidgetLabel"] p {
+  font-size: .9375rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--on-veld-soft);
+}
+.st-key-examples [role="radiogroup"] { gap: .5rem; }
+.st-key-examples button,
+.st-key-examples button:focus:not(:active) {
+  min-height: 44px;
+  padding: 0 1rem;
+  border: 1.5px solid var(--on-veld-line);
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--on-veld);
+  box-shadow: none;
+}
+.st-key-examples button p { font: 600 .9375rem/1.2 var(--font-text); color: inherit; }
+.st-key-examples button:is(:hover, :focus:hover) { background: rgb(255 255 255 / .1); border-color: #fff; color: var(--on-veld); }
+.st-key-examples button:is([aria-checked="true"], [aria-pressed="true"]) { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+
+
+/* 5. Research state (inside the hero) ======================================= */
+.st-key-hero > [data-testid="stElementContainer"]:has(> [data-testid="stSpinner"]) { margin-top: 2rem; }
+.st-key-hero [data-testid="stSpinner"],
+.st-key-hero [data-testid="stSpinner"] [role="status"] p {
+  font-size: 1.0625rem;
+  line-height: 1.45;
+  color: var(--on-veld);
+}
+.st-key-hero [data-testid="stSpinnerIcon"] {
+  border-color: rgb(255 255 255 / .28);
+  border-top-color: var(--gold);
+}
+/* The real elapsed time (show_time=True), in gold. */
+.st-key-hero [data-testid="stSpinner"] [role="status"] + span {
+  opacity: 1;
+  font-size: .875rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--gold);
+}
+
+/* Composer lock: a stray click would rerun the script during a minutes-long crew run. */
+.st-key-hero:has([data-testid="stSpinner"]) :is(.st-key-road, [data-testid="stButton"]) { pointer-events: none; }
+.st-key-hero:has([data-testid="stSpinner"]) [data-testid="stBaseButton-primary"],
+.st-key-hero:has([data-testid="stSpinner"]) [data-testid="stBaseButton-primary"]:focus:not(:active) {
+  background: transparent;
+  color: rgb(255 255 255 / .72);
+  box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / .5);
+}
+
+/* The crew: the README's sentence and agent names, as four signposts.
+   Names only: the crew reports no progress, so no step is ever highlighted. */
+.st-key-hero > [data-testid="stLayoutWrapper"]:has(> .st-key-crew) { margin-top: 1.375rem; }
+.st-key-hero:not(:has([data-testid="stSpinner"])) [data-testid="stLayoutWrapper"]:has(> .st-key-crew),
+.st-key-hero:not(:has([data-testid="stSpinner"])) .st-key-crew { display: none; }
+.st-key-crew {
+  gap: .75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--on-veld-hair);
+}
+.st-key-crew [data-testid="stCaptionContainer"],
+.st-key-crew [data-testid="stCaptionContainer"] p {
+  opacity: 1;
+  font-size: .9375rem;
+  line-height: 1.45;
+  color: var(--on-veld-soft);
+}
+.st-key-crew [data-testid="stMarkdownContainer"] ol {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .625rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: crew;
+  perspective: 900px;
+}
+.st-key-crew [data-testid="stMarkdownContainer"] li {
+  counter-increment: crew;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  min-height: 44px;
+  margin: 0;
+  padding: .625rem .75rem;
+  background: var(--veld-deep);
+  border: 1px solid var(--on-veld-hair);
+  border-radius: var(--r-tile);
+  box-shadow: var(--sh-tile);
+  font-size: .9375rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--on-veld);
+}
+.st-key-crew [data-testid="stMarkdownContainer"] li::before {
+  content: counter(crew);
+  font: 800 1rem/1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--gold);
+}
+
+
+/* 6. Errors ================================================================= */
+.stApp [data-testid="stAlertContainer"] {
+  padding: .875rem 1rem;
+  background: var(--alert-wash);
+  border: 1px solid var(--alert-edge);
+  border-radius: var(--r-alert);
+  color: var(--alert-ink);
+  overflow-wrap: anywhere;
+}
+.stApp [data-testid="stAlertContainer"] :is(p, div, [data-testid="stMarkdownContainer"]) { color: var(--alert-ink); }
+.stApp [data-testid="stAlertContainer"] :is([data-testid="stAlertDynamicIcon"], [data-testid="stIconMaterial"], svg) { color: var(--sa-red); fill: currentColor; }
+
+/* Research failure, inside the hero: the road "did not come together". */
+.st-key-hero > [data-testid="stElementContainer"]:has([data-testid="stAlert"]) { margin-top: 2rem; }
+.st-key-hero:has([data-testid="stAlert"]) .st-key-road::before,
+.st-key-hero:has([data-testid="stAlert"]) .st-key-road::after { filter: saturate(.35) brightness(.92); }
+
+/* Start-up error (no LLM): on paper, directly under the veld header. */
+[data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] > [data-testid="stElementContainer"]:has(> [data-testid="stAlert"]) { margin-top: 2rem; }
+
+
+/* 7. Chat masthead ========================================================== */
+/* A slim full-bleed veld bar; the hero's road survives as its 3px gold rule. */
+.st-key-masthead {
+  position: relative;
+  gap: .375rem;
+  padding: 1.125rem 0 1.375rem;
+  background: var(--veld);
+  box-shadow: 0 0 0 100vmax var(--veld);
+  clip-path: inset(-6rem -100vmax 0 -100vmax);   /* paints up under the header: no paper gap */
+}
+.st-key-masthead::after {
+  content: "";
+  position: absolute;
+  left: calc(50% - 50vw);
+  bottom: 0;
+  width: 100vw;
+  height: 3px;
+  background: var(--gold);
+}
+.st-key-masthead [data-testid="stHeading"] { margin: 0; }
+.st-key-masthead [data-testid="stHeading"] h1 {
+  margin: 0;
+  padding: 0;
+  font: 800 1.375rem/1.1 var(--font-display);
+  letter-spacing: -.01em;
+  color: var(--on-veld);
+}
+.st-key-masthead > [data-testid="stElementContainer"] > [data-testid="stMarkdown"] p {
+  margin: 0;
+  font-size: .9375rem;
+  line-height: 1.4;
+  color: var(--on-veld-soft);
+}
+
+
+/* 8. Sticky chat head ======================================================= */
+/* "Let's chat about: ..." and Start a New Topic stay in reach while you read. */
+[data-testid="stLayoutWrapper"]:has(> .st-key-chat_head) {
+  position: sticky;
+  top: 3.75rem;
+  z-index: 3;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line-soft);
+}
+.st-key-chat_head {
+  gap: .75rem 1rem;
+  padding: 1.375rem 0 1rem;
+}
+.st-key-chat_head > [data-testid="stElementContainer"]:has([data-testid="stHeading"]) { flex: 1 1 18rem; min-width: 0; }
+.st-key-chat_head [data-testid="stHeading"] { margin: 0; }
+.st-key-chat_head [data-testid="stHeading"] h2 {
+  margin: 0;
+  padding: 0;
+  font: 800 1.75rem/1.15 var(--font-display);
+  letter-spacing: -.015em;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.st-key-chat_head [data-testid="stBaseButton-secondary"],
+.st-key-chat_head [data-testid="stBaseButton-secondary"]:focus:not(:active) {
+  min-height: 44px;
+  padding: 0 1.25rem;
+  border: 1.5px solid var(--veld);
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--veld);
+  box-shadow: none;
+  white-space: nowrap;
+}
+.st-key-chat_head [data-testid="stBaseButton-secondary"] p { font: 700 .9375rem/1.2 var(--font-text); color: inherit; }
+.st-key-chat_head [data-testid="stBaseButton-secondary"]:is(:hover, :focus:hover) { background: var(--green-tint); border-color: var(--veld); color: var(--veld); }
+.st-key-chat_head [data-testid="stBaseButton-secondary"]:is(:active, :focus:active) { background: var(--green-tint); border-color: var(--veld); color: var(--veld); }
+
+
+/* 9. Messages =============================================================== */
+.stApp [data-testid="stChatMessage"] {
+  gap: .875rem;
+  padding: 0;
+  background: transparent;
+}
+/* Between turns: Streamlit's 1rem gap plus .625rem = 1.625rem. */
+.stApp [data-testid="stLayoutWrapper"]:has(> [data-testid="stChatMessage"]) + [data-testid="stLayoutWrapper"]:has(> [data-testid="stChatMessage"]) { margin-top: .625rem; }
+
+/* Lethabo: the veld tile with the gold eagle, and a visible name. */
+.stApp [data-testid="stChatMessageAvatarAssistant"] {
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-avatar);
+  background: var(--veld);
+  box-shadow: inset 0 -3px 0 var(--gold);
+}
+.stApp [data-testid="stChatMessageAvatarAssistant"] > * { display: none; }
+.stApp [data-testid="stChatMessageAvatarAssistant"]::before {
+  content: "\1F985";
+  margin-top: -2px;
+  font: 600 20px/1 'Noto Emoji', var(--font-display);
+  color: var(--gold);
+}
+.stApp [data-testid="stChatMessage"]:has(> [data-testid="stChatMessageAvatarAssistant"]) [data-testid="stChatMessageContent"]::before {
+  content: "Lethabo";
+  display: block;
+  margin: 2px 0 4px;
+  font: 700 .8125rem/1.3 var(--font-text);
+  letter-spacing: .02em;
+  color: var(--green-700);
+}
+
+/* You: a pale-gold bubble on the right (gold is you, green is Lethabo). */
+.stApp [data-testid="stChatMessage"]:has(> [data-testid="stChatMessageAvatarUser"]) { justify-content: flex-end; }
+.stApp [data-testid="stChatMessageAvatarUser"] { display: none; }
+.stApp [data-testid="stChatMessage"]:has(> [data-testid="stChatMessageAvatarUser"]) [data-testid="stChatMessageContent"] {
+  flex: 0 1 auto;
+  max-width: min(82%, 34rem);
+  margin-left: auto;
+  margin-right: 0;           /* Streamlit centres it otherwise */
+  padding: .625rem 1rem;
+  background: var(--you);
+  border: 1px solid var(--you-edge);
+  border-radius: var(--r-bubble) var(--r-bubble) var(--r-tail) var(--r-bubble);
+}
+
+/* Reading: 1.0625rem/1.65 at about 68 characters a line. */
+.stApp [data-testid="stChatMessageContent"] [data-testid="stMarkdownContainer"] {
+  max-width: 40rem;
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: var(--ink);
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+.stApp [data-testid="stChatMessageContent"] [data-testid="stMarkdownContainer"] :is(p, li) { font-size: inherit; line-height: inherit; }
+.stApp [data-testid="stChatMessageContent"] [data-testid="stMarkdownContainer"] p { margin: 0 0 .85em; }
+.stApp [data-testid="stChatMessageContent"] [data-testid="stMarkdownContainer"] > :last-child,
+.stApp [data-testid="stChatMessageContent"] [data-testid="stMarkdownContainer"] li > :last-child { margin-bottom: 0; }
+.stApp [data-testid="stChatMessageContent"] strong { font-weight: 700; color: var(--ink); }
+
+/* Ordered lists: numerals in green-tint discs (counter(list-item) honours "start"). */
+.stApp [data-testid="stChatMessageContent"] ol {
+  margin: 0 0 .85em;
+  padding-left: 2.1rem;
+  list-style: none;
+}
+.stApp [data-testid="stChatMessageContent"] ol > li { position: relative; margin: 0 0 .5em; padding-left: 0; }
+.stApp [data-testid="stChatMessageContent"] ol > li::before {
+  content: counter(list-item);
+  position: absolute;
+  left: -2.1rem;
+  top: calc(.825em - .75rem);
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--green-tint);
+  font: 800 .875rem/1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--green-700);
+}
+/* Bullets: 7px gold dots ringed in veld. */
+.stApp [data-testid="stChatMessageContent"] ul {
+  margin: 0 0 .85em;
+  padding-left: 1.5rem;
+  list-style: none;
+}
+.stApp [data-testid="stChatMessageContent"] ul > li { position: relative; margin: 0 0 .45em; padding-left: 0; }
+.stApp [data-testid="stChatMessageContent"] ul > li::before {
+  content: "";
+  position: absolute;
+  left: -1.125rem;
+  top: calc(.825em - 5px);
+  width: 7px;
+  height: 7px;
+  border: 1.5px solid var(--veld);
+  border-radius: 50%;
+  background: var(--gold);
+}
+.stApp [data-testid="stChatMessageContent"] li > :is(ol, ul) { margin-top: .45em; }
+
+/* Headings inside answers, scaled for a conversation (no anchor links). */
+.stApp [data-testid="stChatMessageContent"] :is(h1, h2, h3, h4, h5, h6) {
+  margin: 1.4em 0 .4em;
+  padding: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--ink);
+}
+.stApp [data-testid="stChatMessageContent"] :is(h1, h2) { font-size: 1.375rem; line-height: 1.25; }
+.stApp [data-testid="stChatMessageContent"] h3 { font-size: 1.125rem; line-height: 1.3; }
+.stApp [data-testid="stChatMessageContent"] :is(h4, h5, h6) { font-size: 1rem; line-height: 1.35; }
+.stApp [data-testid="stChatMessageContent"] [data-testid="stMarkdownContainer"] > :first-child :is(h1, h2, h3, h4, h5, h6),
+.stApp [data-testid="stChatMessageContent"] [data-testid="stMarkdownContainer"] > :is(h1, h2, h3, h4, h5, h6):first-child { margin-top: 0; }
+.stApp [data-testid="stChatMessageContent"] [data-testid="stHeaderActionElements"] { display: none; }
+
+/* Links, tables, quotes and code inside answers. */
+.stApp [data-testid="stChatMessageContent"] a { color: var(--link); }
+.stApp [data-testid="stChatMessageContent"] table {
+  display: block;            /* scrolls in its own box on phones */
+  width: max-content;        /* the box hugs the table... */
+  max-width: 100%;           /* ...up to the reading column */
+  overflow-x: auto;
+  margin: 0 0 .85em;
+  border-collapse: collapse;
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  font-size: .9375rem;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+.stApp [data-testid="stChatMessageContent"] :is(th, td) { padding: .5rem .75rem; border: 1px solid var(--line-soft); text-align: left; vertical-align: top; }
+.stApp [data-testid="stChatMessageContent"] th { background: var(--mist); font-weight: 700; color: var(--ink); }
+/* The rounded outer border belongs to the table box; outer cell edges stay open so lines never double. */
+.stApp [data-testid="stChatMessageContent"] tr > :first-child { border-left: 0; }
+.stApp [data-testid="stChatMessageContent"] tr > :last-child { border-right: 0; }
+.stApp [data-testid="stChatMessageContent"] table > :first-child > tr:first-child > * { border-top: 0; }
+.stApp [data-testid="stChatMessageContent"] table > :last-child > tr:last-child > * { border-bottom: 0; }
+.stApp [data-testid="stChatMessageContent"] blockquote {
+  margin: 0 0 .85em;
+  padding: .75rem 1rem;
+  background: var(--mist);
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  color: var(--ink);
+  opacity: 1;                /* Streamlit fades quotes to .6; quoted law stays full strength */
+}
+.stApp [data-testid="stChatMessageContent"] blockquote > :last-child { margin-bottom: 0; }
+.stApp [data-testid="stChatMessageContent"] :not(pre) > code { padding: .1em .35em; background: var(--mist); border-radius: 6px; color: var(--ink); font-size: .9em; }
+.stApp [data-testid="stChatMessageContent"] pre { background: var(--mist); border-radius: 12px; }
+.stApp [data-testid="stChatMessageContent"] pre code { font-size: .875rem; line-height: 1.55; color: var(--ink); }
+
+/* "Lethabo is thinking...": three gold dots ringed in veld replace Streamlit's ring. */
+.stApp [data-testid="stChatMessage"] [data-testid="stSpinner"] [role="status"] p { color: var(--ink-2); }
+.stApp [data-testid="stChatMessage"] span:has(> [data-testid="stSpinnerIcon"]) {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 2.5rem;             /* three dots (34px) plus breathing room before the text */
+  height: auto;
+  min-height: 1.5rem;
+}
+.stApp [data-testid="stChatMessage"] [data-testid="stSpinnerIcon"],
+.stApp [data-testid="stChatMessage"] [data-testid="stSpinnerIcon"]::before,
+.stApp [data-testid="stChatMessage"] [data-testid="stSpinnerIcon"]::after {
+  box-sizing: content-box;
+  width: 7px;
+  height: 7px;
+  margin: 0;
+  border: 1.5px solid var(--veld);
+  border-radius: 50%;
+  background: var(--gold);
+  animation: none;
+}
+.stApp [data-testid="stChatMessage"] [data-testid="stSpinnerIcon"] { position: relative; flex: none; }
+.stApp [data-testid="stChatMessage"] [data-testid="stSpinnerIcon"]::before,
+.stApp [data-testid="stChatMessage"] [data-testid="stSpinnerIcon"]::after {
+  content: "";
+  position: absolute;
+  top: -1.5px;
+}
+.stApp [data-testid="stChatMessage"] [data-testid="stSpinnerIcon"]::before { left: 10.5px; }
+.stApp [data-testid="stChatMessage"] [data-testid="stSpinnerIcon"]::after { left: 22.5px; }
+
+
+/* 10. Dock ================================================================== */
+.stApp [data-testid="stBottom"],
+.stApp [data-testid="stBottom"] > div { background: var(--paper); }
+.stApp [data-testid="stBottom"] {
+  border-top: 1px solid var(--line-soft);
+  box-shadow: var(--sh-dock);
+}
+.stApp [data-testid="stBottomBlockContainer"] { padding-bottom: 1rem; }
+.stApp [data-testid="stChatInput"] > div {
+  min-height: var(--input-h);
+  align-items: center;
+  background: var(--paper);
+  border: 1.5px solid var(--line-ui);
+  border-radius: var(--r-field);
+}
+.stApp [data-testid="stChatInput"]:focus-within { outline: 3px solid var(--link); outline-offset: 2px; border-radius: var(--r-field); }
+.stApp [data-testid="stChatInput"] textarea { font-size: 1.0625rem; color: var(--ink); }
+.stApp [data-testid="stChatInput"] textarea::placeholder { color: var(--ink-2); opacity: 1; }
+.stApp [data-testid="stChatInput"] textarea:focus-visible { outline: none; }
+
+/* Send: a 40px gold circle with an ink arrow, inside a 44px hit area. */
+.stApp [data-testid="stChatInputSubmitButton"] {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border: 1px solid transparent;     /* drawn in forced-colours mode */
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--ink);
+}
+.stApp [data-testid="stChatInputSubmitButton"]::after { content: ""; position: absolute; inset: -2px; border-radius: 50%; }
+.stApp [data-testid="stChatInputSubmitButton"] svg { color: inherit; fill: currentColor; }
+.stApp [data-testid="stChatInputSubmitButton"]:not(:disabled):hover { background: var(--gold-hover); color: var(--ink); }
+.stApp [data-testid="stChatInputSubmitButton"]:not(:disabled):active { background: var(--gold-press); }
+.stApp [data-testid="stChatInputSubmitButton"]:disabled { background: var(--mist); color: var(--ink-2); opacity: 1; }
+
+/* The persistent legal note under the chat input (the persona's own wording). */
+.stApp [data-testid="stBottomBlockContainer"]::after {
+  content: "Lethabo is a guide, not a substitute for a real lawyer.";
+  display: block;
+  margin-top: .5rem;
+  font: 400 .8125rem/1.4 var(--font-text);
+  text-align: center;
+  color: var(--ink-2);
+}
+
+
+/* 12. Motion (only when the visitor has not asked for less) ================ */
+@media (prefers-reduced-motion: no-preference) {
+  /* Buttons, pills, links: colour on hover, a 1px press. No hover lifts. */
+  .st-key-hero [data-testid="stBaseButton-primary"],
+  .st-key-examples button,
+  .st-key-chat_head [data-testid="stBaseButton-secondary"],
+  .stApp [data-testid="stChatInputSubmitButton"] {
+    transition: background-color var(--t-micro) var(--ease-out), border-color var(--t-micro) var(--ease-out),
+                color var(--t-micro) var(--ease-out), box-shadow var(--t-micro) var(--ease-out), transform 100ms var(--ease-out);
+  }
+  .st-key-hero [data-testid="stBaseButton-primary"]:active,
+  .st-key-examples button:active,
+  .st-key-chat_head [data-testid="stBaseButton-secondary"]:active { transform: translateY(1px); transition-duration: var(--t-press); }
+
+  /* Error: the road and the Y desaturate. */
+  .st-key-road::before,
+  .st-key-road::after { transition: filter var(--t-state) ease-out; }
+
+  /* Signature 3D moment: the four crew signposts stand up off the road. */
+  .st-key-crew [data-testid="stMarkdownContainer"] li {
+    transform-origin: 50% 100%;
+    animation: lt-stand var(--t-stand) var(--ease-out) both;
+  }
+  .st-key-crew [data-testid="stMarkdownContainer"] li:nth-child(2) { animation-delay: 90ms; }
+  .st-key-crew [data-testid="stMarkdownContainer"] li:nth-child(3) { animation-delay: 180ms; }
+  .st-key-crew [data-testid="stMarkdownContainer"] li:nth-child(4) { animation-delay: 270ms; }
+  @keyframes lt-stand {
+    from { transform: rotateX(80deg); opacity: .2; }
+    55%  { opacity: 1; }
+    to   { transform: none; opacity: 1; }
+  }
+
+  /* The light flows for exactly as long as the code is working (keyed to the real spinner). */
+  .st-key-hero:has([data-testid="stSpinner"]) .st-key-road::before {
+    background:
+      linear-gradient(90deg, transparent, rgb(255 182 18 / .55) 50%, transparent) no-repeat,
+      linear-gradient(#fff 0 6px, var(--sa-green) 6px calc(100% - 6px), #fff calc(100% - 6px));
+    background-size: 40% 100%, 100% 100%;
+    animation: lt-flow var(--t-flow) linear infinite;
+  }
+  .st-key-hero:has([data-testid="stSpinner"]) .st-key-road::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1400 1400'%3E%3Cstyle%3E.f%7Bstroke-dasharray:40 160%3Banimation:f 2.4s linear infinite%7D%40keyframes f%7Bto%7Bstroke-dashoffset:-200%7D%7D%40media (prefers-reduced-motion:reduce)%7B.f%7Banimation:none%3Bopacity:0%7D%7D%3C/style%3E%3Cpath d='M-160 -800 L1340 700 L-160 2200' fill='none' stroke='%23fff' stroke-width='84' stroke-linejoin='miter' stroke-miterlimit='4'/%3E%3Crect x='1340' y='658' width='60' height='84' fill='%23fff'/%3E%3Cpath d='M1289.1 700 L-210.9 -800 L-210.9 2200 Z' fill='%23FFB612'/%3E%3Cpath d='M1277.8 700 L-222.2 -800 L-222.2 2200 Z' fill='%23003624'/%3E%3Cpath d='M-160 -800 L1340 700 L-160 2200' fill='none' stroke='%23007A4D' stroke-width='72' stroke-linejoin='miter' stroke-miterlimit='4'/%3E%3Crect x='1340' y='664' width='60' height='72' fill='%23007A4D'/%3E%3Cpath class='f' d='M-216.6 -800 L1283.4 700 L-216.6 2200' fill='none' stroke='%23FFE08A' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E"); }
+  @keyframes lt-flow {
+    from { background-position: -70% 0, 0 0; }
+    to   { background-position: 170% 0, 0 0; }
+  }
+
+  /* "Lethabo is thinking...": the dots breathe in turn. */
+  .stApp [data-testid="stChatMessage"] [data-testid="stSpinnerIcon"] { animation: lt-dot 1.2s ease-in-out infinite; }
+  .stApp [data-testid="stChatMessage"] [data-testid="stSpinnerIcon"]::before { animation: lt-dot 1.2s ease-in-out .15s infinite; }
+  .stApp [data-testid="stChatMessage"] [data-testid="stSpinnerIcon"]::after { animation: lt-dot 1.2s ease-in-out .3s infinite; }
+  @keyframes lt-dot {
+    0%, 100% { background-color: rgb(255 182 18 / .3); border-color: rgb(0 76 51 / .3); }
+    50%      { background-color: var(--gold); border-color: var(--veld); }
+  }
+}
+
+
+/* 13. Reduced motion: everything static and fully visible ================= */
+@media (prefers-reduced-motion: reduce) {
+  .st-key-hero [data-testid="stSpinnerIcon"] { animation: none; }   /* a still ring with a gold quarter arc */
+}
+
+
+/* 14. Responsive ============================================================ */
+@media (max-width: 640px) {
+  .st-key-hero { padding: 2.25rem 0 2.75rem; }
+  .st-key-hero > [data-testid="stElementContainer"]:has(> [data-testid="stMarkdown"]) { margin-top: 1rem; }
+  .st-key-hero > [data-testid="stElementContainer"] > [data-testid="stMarkdown"] p { font-size: 1.125rem; }
+  .st-key-hero > [data-testid="stLayoutWrapper"]:has(> .st-key-road) { margin-top: 2rem; }
+  .st-key-guide_note [data-testid="stCaptionContainer"],
+  .st-key-guide_note [data-testid="stCaptionContainer"] p,
+  .st-key-examples [data-testid="stWidgetLabel"] p,
+  .st-key-crew [data-testid="stCaptionContainer"],
+  .st-key-crew [data-testid="stCaptionContainer"] p,
+  .st-key-crew [data-testid="stMarkdownContainer"] li { font-size: .875rem; }
+  .st-key-hero [data-testid="stSpinner"],
+  .st-key-hero [data-testid="stSpinner"] [role="status"] p { font-size: 1rem; }
+  .st-key-crew [data-testid="stMarkdownContainer"] ol { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  .st-key-masthead [data-testid="stHeading"] h1 { font-size: 1.25rem; }
+  .st-key-masthead > [data-testid="stElementContainer"] > [data-testid="stMarkdown"] p { font-size: .875rem; }
+  .st-key-chat_head { padding: 1rem 0 .75rem; }
+  .st-key-chat_head > [data-testid="stElementContainer"]:has([data-testid="stHeading"]) { flex-basis: 12rem; }
+  .st-key-chat_head [data-testid="stHeading"] h2 { font-size: 1.25rem; }
+  .st-key-chat_head [data-testid="stBaseButton-secondary"] p { font-size: .875rem; }
+  .stApp [data-testid="stChatMessage"]:has(> [data-testid="stChatMessageAvatarUser"]) [data-testid="stChatMessageContent"] { max-width: 88%; }
 }
