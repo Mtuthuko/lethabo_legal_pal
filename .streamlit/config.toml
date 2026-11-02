@@ -1,0 +1,26 @@
+# Lethabo, Your Legal Pal: Streamlit theme and server settings.
+# One pinned light theme, so the CSS in style.css and Streamlit's own widgets
+# always agree (the visitor's OS dark mode no longer flips the widgets).
+# The design system behind these values is described in DESIGN.md.
+
+[theme]
+base = "light"
+primaryColor = "#007A4D"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#EFF5F0"
+textColor = "#0F1D16"
+linkColor = "#001489"
+linkUnderline = true
+borderColor = "#6E8377"
+showWidgetBorder = true
+baseRadius = "0.875rem"
+buttonRadius = "full"
+baseFontSize = 16
+paddingTop = "0"
+font = "Atkinson Hyperlegible Next:https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,400..700;1,400..700&display=swap"
+headingFont = "Gabarito:https://fonts.googleapis.com/css2?family=Gabarito:wght@600..900&display=swap"
+headingFontSizes = ["4.25rem", "1.75rem", "1.375rem", "1.125rem", "1rem", "0.9375rem"]
+headingFontWeights = [800, 800, 700, 700, 700, 700]
+redColor = "#DE3831"
+redTextColor = "#A3231C"
+redBackgroundColor = "#FCEDEB"
