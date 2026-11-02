@@ -18,6 +18,36 @@ def load_css(file_name):
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 load_css("style.css")
 
+# --- Living layer (sunbird companion, gold dust, 3D touches) ---
+# A hidden same-origin iframe adds static/living-layer.js (the unchanged kit) and
+# static/lethabo-living.js to the real page, once per browser session.
+# The HTML is a constant: no user input or LLM text is ever put into it.
+LIVING_LOADER = """<!doctype html><html><body style="margin:0"><script>
+(function () {
+  var P = window.parent, D = P.document;
+  if (P.__lethaboLiving) return;                 // once per page session, whatever reruns do
+  P.__lethaboLiving = 'loading';
+  var base = new URL('app/static/', P.location.href).href;
+  function add(file, done) {
+    var s = D.createElement('script');
+    s.src = base + file; s.async = false;
+    s.onload = function () { P.__lethaboLiving = file; if (done) done(); };
+    s.onerror = function () { P.__lethaboLiving = 'failed'; };   // no companion; page unaffected
+    D.head.appendChild(s);
+  }
+  add('living-layer.js?v=1.1.0', function () {
+    if (P.LivingLayer) add('lethabo-living.js?v=1'); else P.__lethaboLiving = 'failed';   // static serving off
+  });
+})();
+</script></body></html>"""
+
+with st.container(key="ll_loader"):
+    if hasattr(st, "iframe"):
+        st.iframe(LIVING_LOADER, height=1, tab_index=-1)
+    else:  # older Streamlit without st.iframe
+        import streamlit.components.v1 as components
+        components.html(LIVING_LOADER, height=0)
+
 # --- Load Environment and LLM ---
 load_dotenv()
 llm = initialize_llm()
@@ -37,8 +67,13 @@ if "chat_agent" not in st.session_state:
 
 # --- UI and Application Logic ---
 
-st.title("Lethabo, Your Legal Pal 🦅")
-st.markdown("##### Howzit! I'm here to help explain South African law in a way that's easy to understand.")
+# The title and greeting sit in one keyed container: a veld "hero" on the
+# welcome view, a slim "masthead" once the chat is open (see style.css).
+in_chat = bool(st.session_state.knowledge_base)
+hero = st.container(key="masthead" if in_chat else "hero")
+with hero:
+    st.title("Lethabo, Your Legal Pal 🦅", anchor=False)
+    st.markdown("**Howzit!** I'm here to help explain South African law in a way that's easy to understand.")
 
 def start_new_chat():
     """Resets the session state to start a new conversation."""
@@ -47,36 +82,72 @@ def start_new_chat():
     st.session_state.chat_agent = None
     st.session_state.topic = ""
 
+GUIDE_NOTE = "Lethabo is a guide, not a substitute for a real lawyer."   # the persona's own wording (agents.py)
+
+# Example topics from the repo's own docs and examples; a pill only fills the box, it never submits.
+EXAMPLE_TOPICS = {
+    "Traffic stops": "your rights during a traffic stop",   # the input label's example
+    "Job contracts": "a new job contract",                  # README
+    "POPIA": "the POPI Act",                                # 'POPI Act Example' screenshots
+    "Companies Act": "the Companies Act",                   # 'example Companies Act' screenshot
+    "Law of delict": "the law of delict",                   # 'law of delict example' screenshot
+}
+
+def use_example():
+    """Fills the topic box with the chosen example, then clears the pill."""
+    choice = st.session_state.get("examples")
+    if choice:
+        st.session_state.topic_box = EXAMPLE_TOPICS[choice]
+    st.session_state.examples = None
+
 
 # --- Main Application Flow ---
 
 # If no topic has been researched yet, show the input form.
 if not st.session_state.knowledge_base:
-    st.session_state.topic = st.text_input("What legal topic can I help you with today? (e.g., 'your rights during a traffic stop')")
+    with hero:
+        # The topic field sits on the "road" drawn behind it in style.css.
+        with st.container(key="road"):
+            st.session_state.topic = st.text_input(
+                "What legal topic can I help you with today? (e.g., 'your rights during a traffic stop')",
+                key="topic_box",
+                placeholder="your rights during a traffic stop",
+            )
 
-    if st.button("Explain This to Me!") and st.session_state.topic:
-        with st.spinner(f"Okay, sharp! My research team is on it. We're gathering the best info on '{st.session_state.topic}'..."):
-            try:
-                # 1. Create and run the research crew
-                legal_crew = create_legal_crew(llm, st.session_state.topic)
-                result = legal_crew.kickoff()
-                st.session_state.knowledge_base = result
-                
-                # 2. Initialize Lethabo, our chat agent
-                st.session_state.chat_agent = create_chat_agent(llm)
-                
-                # 3. Set up the first message
-                st.session_state.messages.append({"role": "assistant", "content": f"Awesome! I've got the lowdown on '{st.session_state.topic}'. What's your first question?"})
-                
-                st.rerun()
+        explain = st.button("Explain This to Me!", type="primary")
+        with st.container(key="guide_note"):
+            st.caption(f":material/info: {GUIDE_NOTE}")
 
-            except Exception as e:
-                st.error(f"Eish, something went wrong. Please try another topic. Error: {e}")
+        if explain and st.session_state.topic:
+            with st.spinner(f"Okay, sharp! My research team is on it. We're gathering the best info on '{st.session_state.topic}'...", show_time=True):
+                # The README's crew, shown while it works (names only: no progress is reported).
+                with st.container(key="crew"):
+                    st.caption("A powerful multi-agent crew works in the background to research SA law and simplify it.")
+                    st.markdown("1. Researcher\n2. Simplifier\n3. Scenario Creator\n4. Reviewer")
+                try:
+                    # 1. Create and run the research crew
+                    legal_crew = create_legal_crew(llm, st.session_state.topic)
+                    result = legal_crew.kickoff()
+                    st.session_state.knowledge_base = result
+
+                    # 2. Initialize Lethabo, our chat agent
+                    st.session_state.chat_agent = create_chat_agent(llm)
+
+                    # 3. Set up the first message
+                    st.session_state.messages.append({"role": "assistant", "content": f"Awesome! I've got the lowdown on '{st.session_state.topic}'. What's your first question?"})
+
+                    st.rerun()
+
+                except Exception as e:
+                    st.error(f"Eish, something went wrong. Please try another topic. Error: {e}")
+
+        st.pills("Or try an example", list(EXAMPLE_TOPICS), key="examples", on_change=use_example)
 
 # If a topic has been researched, show the chat interface.
 else:
-    st.header(f"Let's chat about: {st.session_state.topic.title()}")
-    st.button("Start a New Topic", on_click=start_new_chat)
+    with st.container(key="chat_head", horizontal=True, vertical_alignment="center"):
+        st.header(f"Let's chat about: {st.session_state.topic.title()}", anchor=False)
+        st.button("Start a New Topic", on_click=start_new_chat)
 
     # Display chat messages
     for message in st.session_state.messages:
