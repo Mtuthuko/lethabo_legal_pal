@@ -18,6 +18,36 @@ def load_css(file_name):
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 load_css("style.css")
 
+# --- Living layer (sunbird companion, gold dust, 3D touches) ---
+# A hidden same-origin iframe adds static/living-layer.js (the unchanged kit) and
+# static/lethabo-living.js to the real page, once per browser session.
+# The HTML is a constant: no user input or LLM text is ever put into it.
+LIVING_LOADER = """<!doctype html><html><body style="margin:0"><script>
+(function () {
+  var P = window.parent, D = P.document;
+  if (P.__lethaboLiving) return;                 // once per page session, whatever reruns do
+  P.__lethaboLiving = 'loading';
+  var base = new URL('app/static/', P.location.href).href;
+  function add(file, done) {
+    var s = D.createElement('script');
+    s.src = base + file; s.async = false;
+    s.onload = function () { P.__lethaboLiving = file; if (done) done(); };
+    s.onerror = function () { P.__lethaboLiving = 'failed'; };   // no companion; page unaffected
+    D.head.appendChild(s);
+  }
+  add('living-layer.js?v=1.1.0', function () {
+    if (P.LivingLayer) add('lethabo-living.js?v=1'); else P.__lethaboLiving = 'failed';   // static serving off
+  });
+})();
+</script></body></html>"""
+
+with st.container(key="ll_loader"):
+    if hasattr(st, "iframe"):
+        st.iframe(LIVING_LOADER, height=1, tab_index=-1)
+    else:  # older Streamlit without st.iframe
+        import streamlit.components.v1 as components
+        components.html(LIVING_LOADER, height=0)
+
 # --- Load Environment and LLM ---
 load_dotenv()
 llm = initialize_llm()

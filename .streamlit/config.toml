@@ -3,6 +3,10 @@
 # always agree (the visitor's OS dark mode no longer flips the widgets).
 # The design system behind these values is described in DESIGN.md.
 
+[server]
+# Serves static/*.js at /app/static/ (the living-layer kit and its controller).
+enableStaticServing = true
+
 [theme]
 base = "light"
 primaryColor = "#007A4D"

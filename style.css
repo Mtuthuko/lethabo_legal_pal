@@ -723,6 +723,32 @@
 }
 
 
+/* 11. Living-layer helpers ================================================== */
+/* The hidden loader iframe (app.py) that adds the kit to the page: 1px, out of flow, invisible. */
+[data-testid="stLayoutWrapper"]:has(> .st-key-ll_loader),
+.st-key-ll_loader {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* The kit's "Moving effects" pause button. Bottom-left is clear of the
+   content column from 1024px up; on narrower screens the column reaches the
+   left edge, so the button docks in the empty left end of the veld header
+   instead, where it never covers a pill, signpost or the guide note.
+   (The kit sets its z-index inline, hence !important to sit above the header.) */
+@media (max-width: 1023px) {
+  body > .ll-toggle.ll-bottom-left {
+    top: calc(10px + env(safe-area-inset-top, 0px));
+    bottom: auto;
+    z-index: 999991 !important;
+  }
+}
+
+
 /* 12. Motion (only when the visitor has not asked for less) ================ */
 @media (prefers-reduced-motion: no-preference) {
   /* Buttons, pills, links: colour on hover, a 1px press. No hover lifts. */
